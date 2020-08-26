@@ -1,0 +1,65 @@
+---
+
+- import_tasks: lookups.yml
+
+- import_tasks: get_limited_use_token.yml
+
+- set_fact:
+    vka_cluster1: "{{ lookup('template', '../templates/vault_v1alpha1_vaultkubeauth.yaml.j2') | from_yaml }}"
+  vars:
+    name: "{{ cluster1_name }}"
+    vault_addr: "http://{{ vault_ip }}:8200/"
+    vault_mount_path: "{{ cluster1_mount_path }}"
+    vault_mount_admin_policy: "{{ cluster1_admin_policy }}"
+    vault_token: "{{ limited_use_token.stdout }}"
+
+- import_tasks: create_cr.yml
+  vars:
+    definition: "{{ vka_cluster1 }}"
+
+- set_fact:
+    vaultkuberole: "{{ lookup('template', '../templates/vault_v1alpha1_vaultkuberole.yaml.j2') | from_yaml }}"
+  vars:
+    name: "{{ cluster1_deployer_role }}"
+    vaultkubeauth_name: "{{ cluster1_name }}"
+    service_account_name: "{{ vault_client_sa_name }}"
+    service_account_namespace: "{{ namespace }}"
+    policies:
+      - default
+
+- import_tasks: create_cr.yml
+  vars:
+    definition: "{{ vaultkuberole }}"
+
+- block:
+    - name: Test Kubernetes Login
+      community.kubernetes.k8s_exec:
+        namespace: '{{ namespace }}'
+        pod: "{{ vault_client_pod_name }}"
+        command: >
+          vault write -address=http://{{ vault_ip }}:8200
+          -format=yaml
+          auth/k8s/cluster1/login role={{ cluster1_deployer_role }}
+          jwt=@/var/run/secrets/kubernetes.io/serviceaccount/token
+      register: vault_login
+      changed_when: false
+
+    - set_fact:
+        role_vault_token: "{{ vault_login.stdout | from_yaml }}"
+
+    - name: Check token has default policy
+      assert:
+        that: "'default' in role_vault_token.auth.token_policies"
+
+    - name: Check token has default lease ttl
+      assert:
+        that: role_vault_token.auth.lease_duration == 300
+
+  always:
+    - import_tasks: delete_cr.yml
+      vars:
+        definition: "{{ vaultkuberole }}"
+
+    - import_tasks: delete_cr.yml
+      vars:
+        definition: "{{ vka_cluster1 }}"

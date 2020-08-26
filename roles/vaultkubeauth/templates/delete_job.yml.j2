@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ vaultkubeauth_delete_job_name }}"
+  namespace: "{{ vaultkubeauth_namespace }}"
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      name: "{{ vaultkubeauth_delete_job_name }}"
+      annotations:
+        openshift.io/scc: restricted
+    spec:
+      containers:
+        - name: "{{ vaultkubeauth_delete_job_name }}"
+          image: "{{ vault_client_image }}"
+          command:
+            - "/usr/local/bin/vault_trust_delete"
+          volumeMounts:
+            - name: scripts
+              mountPath: /usr/local/bin
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: "0.5"
+              memory: 32Mi
+            limits:
+              cpu: "1"
+              memory: 64Mi
+      serviceAccountName: "{{ vaultkubeauth_trust_admin_sa_name }}"
+      restartPolicy: Never
+      volumes:
+        - name: scripts
+          configMap:
+            name: "{{ vaultkubeauth_scripts_name }}"
+            defaultMode: 0755

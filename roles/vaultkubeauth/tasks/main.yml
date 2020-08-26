@@ -1,0 +1,38 @@
+---
+# tasks file for VaultKubeAuth
+
+- name: Create scripts for managing auth mount
+  k8s:
+    definition: "{{ lookup('template', 'scripts_cm.yml.j2') }}"
+  when: state == 'present'
+
+- name: Mount vault kubernetes auth
+  k8s:
+    definition: "{{ lookup('template', 'init_job.yml.j2') }}"
+  register: job
+  until: job.result.status.get('succeeded') == 1
+  retries: 9
+  delay: 10
+  when: state == 'present'
+
+- name: Remove token from custom resource
+  k8s:
+    api_version: vault.controlplane.io/v1alpha1
+    kind: VaultKubeAuth
+    name: "{{ vaultkubeauth_name }}"
+    namespace: "{{ vaultkubeauth_namespace }}"
+    definition:
+      spec:
+        vault_token: PROCESSED
+  when:
+    - state == 'present'
+    - _vault_controlplane_io_vaultkubeauth.metadata.generation == 1
+
+- name: Delete vault kubernetes auth
+  k8s:
+    definition: "{{ lookup('template', 'delete_job.yml.j2') }}"
+  register: job
+  until: job.result.status.get('succeeded') == 1
+  retries: 9
+  delay: 10
+  when: state == 'absent'

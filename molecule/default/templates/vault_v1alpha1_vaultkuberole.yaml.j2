@@ -1,0 +1,16 @@
+apiVersion: vault.controlplane.io/v1alpha1
+kind: VaultKubeRole
+metadata:
+  name: {{ name }}
+  namespace: {{ namespace }}
+spec:
+  vaultkubeauth_name: {{ vaultkubeauth_name }}
+  service_account_name: {{ service_account_name }}
+  service_account_namespace: {{ service_account_namespace }}
+{% if token_ttl is defined %}
+  token_ttl: {{ token_ttl }}
+{% endif %}
+{% if token_max_ttl is defined %}
+  token_max_ttl: {{ token_max_ttl }}
+{% endif %}
+  policies: {{ policies }}

@@ -1,0 +1,48 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ vaultkuberole_job_name }}"
+  namespace: "{{ vaultkuberole_namespace }}"
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      name: "{{ vaultkuberole_job_name }}"
+      annotations:
+        openshift.io/scc: restricted
+    spec:
+      containers:
+        - name: "{{ vaultkuberole_job_name }}"
+          image: "{{ vault_client_image }}"
+          command:
+            - "/usr/local/bin/{{ 'vault_trust_add_role' if state == 'present' else 'vault_trust_delete_role' }}"
+          args:
+            - "{{ vaultkuberole_name }}"
+            - "{{ service_account_name }}"
+            - "{{ service_account_namespace }}"
+            - "{{ policies | join(',') }}"
+            - "{{ token_ttl }}"
+            - "{{ token_max_ttl }}"
+          volumeMounts:
+            - name: scripts
+              mountPath: /usr/local/bin
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: "0.5"
+              memory: 32Mi
+            limits:
+              cpu: "1"
+              memory: 64Mi
+      serviceAccountName: "{{ vaultkuberole_trust_admin_sa_name }}"
+      restartPolicy: Never
+      volumes:
+        - name: scripts
+          configMap:
+            name: "{{ vaultkuberole_scripts_name }}"
+            defaultMode: 0755

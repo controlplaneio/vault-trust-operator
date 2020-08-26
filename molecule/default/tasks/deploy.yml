@@ -1,0 +1,18 @@
+---
+
+- name: Deploy the operator
+  k8s:
+    namespace: "{{ namespace }}"
+    definition: "{{ item }}"
+    state: "{{ state }}"
+  with_file:
+    - ../../deploy/crds/vault.controlplane.io_vaultkubeauths_crd.yaml
+    - ../../deploy/crds/vault.controlplane.io_vaultkuberoles_crd.yaml
+    - ../../deploy/service_account.yaml
+    - ../../deploy/vault_token_reviewer.yaml
+    - ../../deploy/vault_token_reviewer_clusterrole.yaml
+    - ../../deploy/vault_token_reviewer_clusterrole_binding.yaml
+    - ../../deploy/vault_trust_admin.yaml
+    - ../../deploy/role.yaml
+    - ../../deploy/role_binding.yaml
+    - ../../deploy/operator.yaml

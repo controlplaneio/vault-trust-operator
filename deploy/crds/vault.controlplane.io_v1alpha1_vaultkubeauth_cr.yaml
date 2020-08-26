@@ -1,0 +1,10 @@
+apiVersion: vault.controlplane.io/v1alpha1
+kind: VaultKubeAuth
+metadata:
+  name: cluster1-mount1
+spec:
+  cluster_api_addr: https://kubernetes.default.svc/
+  vault_addr: http://vault.vault.svc:8200/
+  vault_mount_path: k8s/cluster1-mount1
+  vault_mount_admin_policy: vaultkubeauth-cluster1-mount1-admin
+  vault_token: s.xxxxxxxxxxxxxxxxxxxxxxxx

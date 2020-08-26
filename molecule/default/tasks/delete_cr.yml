@@ -1,0 +1,7 @@
+---
+
+- name: "Delete  {{ definition.metadata.name }} custom resource"
+  community.kubernetes.k8s:
+    definition: "{{ definition }}"
+    state: absent
+    wait: yes

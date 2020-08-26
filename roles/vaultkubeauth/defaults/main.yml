@@ -1,0 +1,5 @@
+---
+# defaults file for VaultKubeAuth
+
+state: present
+vault_client_image: vault:latest

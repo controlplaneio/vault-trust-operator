@@ -1,0 +1,35 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: delegated
+lint: |
+  set -e
+  yamllint -d "{extends: relaxed, rules: {line-length: {max: 120}}}" .
+platforms:
+  - name: cluster
+    groups:
+      - k8s
+provisioner:
+  name: ansible
+  inventory:
+    group_vars:
+      all:
+        namespace: ${TEST_OPERATOR_NAMESPACE:-vault-trust-operator}
+    host_vars:
+      localhost:
+        ansible_python_interpreter: '{{ ansible_playbook_python }}'
+        config_dir: ${MOLECULE_PROJECT_DIRECTORY}/config
+        samples_dir: ${MOLECULE_PROJECT_DIRECTORY}/config/samples
+        vault_bootstrap_policy: vaultkubeauth-bootstrap
+        cluster1_name: cluster1
+        cluster1_mount_path: "k8s/{{ cluster1_name }}"
+        cluster1_admin_policy: "vaultkubeauth-{{ cluster1_name }}-admin"
+        cluster1_deployer_role: "{{ cluster1_name }}-{{ namespace }}-deployer"
+        cluster2_name: cluster2
+        cluster2_mount_path: "k8s/{{ cluster2_name }}"
+        cluster2_admin_policy: "vaultkubeauth-{{ cluster2_name }}-admin"
+  env:
+    K8S_AUTH_KUBECONFIG: ${KUBECONFIG:-"~/.kube/config"}
+verifier:
+  name: ansible

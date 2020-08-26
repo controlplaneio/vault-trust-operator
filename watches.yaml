@@ -1,0 +1,17 @@
+---
+- version: v1alpha1
+  group: vault.controlplane.io
+  kind: VaultKubeAuth
+  role: vaultkubeauth
+  finalizer:
+    name: finalizer.vaultkubeauth.vault.controlplane.io
+    vars:
+      state: absent
+- version: v1alpha1
+  group: vault.controlplane.io
+  kind: VaultKubeRole
+  role: vaultkuberole
+  finalizer:
+    name: finalizer.vaultkuberole.vault.controlplane.io
+    vars:
+      state: absent

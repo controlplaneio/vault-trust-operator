@@ -1,0 +1,38 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: vault-policy-bootstrap
+data:
+  bootstrap: |-
+    #!/usr/bin/env sh
+    vault policy write vaultkubeauth-bootstrap - <<EOF
+    path "auth/k8s/*"
+    {
+      capabilities = ["create", "update"]
+    }
+    path "sys/auth/k8s/*"
+    {
+      capabilities = ["update", "sudo"]
+    }
+    EOF
+    vault policy write vaultkubeauth-cluster1-admin - <<EOF
+    path "sys/auth/k8s/cluster1"
+    {
+        capabilities = ["delete", "sudo"]
+    }
+    path "auth/k8s/cluster1/role/*"
+    {
+        capabilities = ["create", "read", "update", "delete", "list"]
+    }
+    EOF
+    vault policy write vaultkubeauth-cluster2-admin - <<EOF
+    path "sys/auth/k8s/cluster2"
+    {
+        capabilities = ["delete", "sudo"]
+    }
+    path "auth/k8s/cluster2/role/*"
+    {
+        capabilities = ["create", "read", "update", "delete", "list"]
+    }
+    EOF

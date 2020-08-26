@@ -1,0 +1,7 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault-trust-admin
+  labels:
+    meta.controlplane.io/role: vault-trust-admin

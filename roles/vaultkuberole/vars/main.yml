@@ -1,0 +1,8 @@
+---
+# vars file for VaultKubeRole
+
+vaultkuberole_name: "{{ meta.name }}"
+vaultkuberole_namespace: "{{ meta.namespace }}"
+vaultkuberole_scripts_name: "{{ vaultkubeauth_name }}-scripts"
+vaultkuberole_trust_admin_sa_name: vault-trust-admin
+vaultkuberole_job_name: "{{ 'create' if state == 'present' else 'delete' }}-{{ vaultkuberole_name }}"

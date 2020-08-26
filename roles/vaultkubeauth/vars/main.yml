@@ -1,0 +1,11 @@
+---
+# vars file for VaultKubeAuth
+
+vaultkubeauth_name: "{{ meta.name }}"
+vaultkubeauth_namespace: "{{ meta.namespace }}"
+vaultkubeauth_token_reviewer_sa_name: vault-token-reviewer
+vaultkubeauth_trust_admin_sa_name: vault-trust-admin
+vaultkubeauth_scripts_name: "{{ vaultkubeauth_name }}-scripts"
+vaultkubeauth_init_job_name: "init-{{ vaultkubeauth_name }}-auth"
+vaultkubeauth_delete_job_name: "delete-{{ vaultkubeauth_name }}-auth"
+vaultkubeauth_admin_role_name: "{{ vaultkubeauth_name }}-admin"

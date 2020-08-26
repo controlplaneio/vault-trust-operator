@@ -1,0 +1,69 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: vaultkuberoles.vault.controlplane.io
+spec:
+  group: vault.controlplane.io
+  names:
+    kind: VaultKubeRole
+    listKind: VaultKubeRoleList
+    plural: vaultkuberoles
+    singular: vaultkuberole
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          description: VaultKubeRole is the Schema for the vaultkuberoles API
+          properties:
+            apiVersion:
+              description: |
+                'APIVersion defines the versioned schema of this representation
+                of an object. Servers should convert recognized schemas to the latest
+                internal value, and may reject unrecognized values. More info:
+                https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+              type: string
+            kind:
+              description: |
+                'Kind is a string value representing the REST resource this
+                object represents. Servers may infer this from the endpoint the client
+                submits requests to. Cannot be updated. In CamelCase. More info:
+                https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: Spec defines the desired state of VaultKubeRole
+              type: object
+              properties:
+                vaultkubeauth_name:
+                  type: string
+                service_account_name:
+                  type: string
+                service_account_namespace:
+                  type: string
+                policies:
+                  type: array
+                  items:
+                    type: string
+                token_ttl:
+                  type: string
+                  default: 5m
+                token_max_ttl:
+                  type: string
+                  default: 30m
+              required:
+                - vaultkubeauth_name
+                - service_account_name
+                - service_account_namespace
+                - policies
+            status:
+              description: Status defines the observed state of VaultKubeRole
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}

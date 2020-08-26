@@ -1,0 +1,56 @@
+---
+
+- import_tasks: lookups.yml
+
+- import_tasks: get_limited_use_token.yml
+
+- set_fact:
+    vka_cluster1: "{{ lookup('template', '../templates/vault_v1alpha1_vaultkubeauth.yaml.j2') | from_yaml }}"
+  vars:
+    name: "{{ cluster1_name }}"
+    vault_addr: "http://{{ vault_ip }}:8200/"
+    vault_mount_path: "{{ cluster1_mount_path }}"
+    vault_mount_admin_policy: "{{ cluster1_admin_policy }}"
+    vault_token: "{{ limited_use_token.stdout }}"
+
+- import_tasks: create_cr.yml
+  vars:
+    definition: "{{ vka_cluster1 }}"
+
+- block:
+#    - name: Wait for token to be removed
+#      community.kubernetes.k8s_info:
+#        api_version: vault.controlplane.io/v1alpha1
+#        kind: VaultKubeAuth
+#        name: "{{ cluster1_name }}"
+#        namespace: "{{ namespace }}"
+#      register: cr
+##      until: cr.resources.0.spec.vault_token == 'PROCESSED'
+##      retries: 9
+##      delay: 10
+#
+#    - debug:
+#        var: cr
+
+    ## TODO: Figure out why token is being readded
+    - name: Wait for reconcillation
+      pause:
+        minutes: 5
+
+    - name: Get Cr
+      community.kubernetes.k8s_info:
+        api_version: vault.controlplane.io/v1alpha1
+        kind: VaultKubeAuth
+        name: "{{ cluster1_name }}"
+        namespace: "{{ namespace }}"
+      register: cr
+      changed_when: false
+
+    - name: Check token has been removed
+      assert:
+        that: "'PROCESSED' in cr.resources.0.spec.vault_token"
+
+  always:
+    - import_tasks: delete_cr.yml
+      vars:
+        definition: "{{ vka_cluster1 }}"

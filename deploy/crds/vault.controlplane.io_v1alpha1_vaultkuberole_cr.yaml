@@ -1,0 +1,10 @@
+apiVersion: vault.controlplane.io/v1alpha1
+kind: VaultKubeRole
+metadata:
+  name: cluster1-mount1-test-default
+spec:
+  vaultkubeauth_name: cluster1-mount1
+  service_account_name: default
+  service_account_namespace: test
+  policies:
+    - default

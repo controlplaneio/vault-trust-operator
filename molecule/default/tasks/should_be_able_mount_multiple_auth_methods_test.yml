@@ -1,0 +1,62 @@
+---
+
+- import_tasks: lookups.yml
+
+- import_tasks: get_limited_use_token.yml
+
+- set_fact:
+    vka_cluster1: "{{ lookup('template', '../templates/vault_v1alpha1_vaultkubeauth.yaml.j2') | from_yaml }}"
+  vars:
+    name: "{{ cluster1_name }}"
+    vault_addr: "http://{{ vault_ip }}:8200/"
+    vault_mount_path: "{{ cluster1_mount_path }}"
+    vault_mount_admin_policy: "{{ cluster1_admin_policy }}"
+    vault_token: "{{ limited_use_token.stdout }}"
+
+- import_tasks: create_cr.yml
+  vars:
+    definition: "{{ vka_cluster1 }}"
+
+- import_tasks: get_limited_use_token.yml
+
+- set_fact:
+    vka_cluster2: "{{ lookup('template', '../templates/vault_v1alpha1_vaultkubeauth.yaml.j2') | from_yaml }}"
+  vars:
+    name: "{{ cluster2_name }}"
+    vault_addr: "http://{{ vault_ip }}:8200/"
+    vault_mount_path: "{{ cluster2_mount_path }}"
+    vault_mount_admin_policy: "{{ cluster2_admin_policy }}"
+    vault_token: "{{ limited_use_token.stdout }}"
+
+- import_tasks: create_cr.yml
+  vars:
+    definition: "{{ vka_cluster2 }}"
+
+- block:
+    - name: List Mounted Auth Methods
+      community.kubernetes.k8s_exec:
+        namespace: '{{ namespace }}'
+        pod: "{{ vault_pod_name }}"
+        command: vault auth list -format=yaml
+      register: vault_auth_list
+      changed_when: false
+
+    - set_fact:
+        vault_auths: "{{ vault_auth_list.stdout | from_yaml }}"
+
+    - name: "Check {{ vka_cluster1.metadata.name }} is mounted"
+      assert:
+        that: vault_auths.get('k8s/cluster1/', 'undefined') != 'undefined'
+
+    - name: "Check {{ vka_cluster2.metadata.name }} is mounted"
+      assert:
+        that: vault_auths.get('k8s/cluster2/', 'undefined') != 'undefined'
+
+  always:
+    - import_tasks: delete_cr.yml
+      vars:
+        definition: "{{ vka_cluster1 }}"
+
+    - import_tasks: delete_cr.yml
+      vars:
+        definition: "{{ vka_cluster2 }}"

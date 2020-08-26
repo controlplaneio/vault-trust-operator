@@ -1,0 +1,13 @@
+---
+
+- name: Vault Env
+  k8s:
+    namespace: "{{ namespace }}"
+    definition: "{{ item }}"
+    state: "{{ state }}"
+  with_file:
+    - manifests/vault_cm.yaml
+    - manifests/vault_deployment.yaml
+    - manifests/vault_svc.yaml
+    - manifests/vault_client_sa.yaml
+    - manifests/vault_client_deployment.yaml

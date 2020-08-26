@@ -1,0 +1,45 @@
+---
+
+- community.kubernetes.k8s_info:
+    kind: Pod
+    namespace: '{{ namespace }}'
+    label_selectors:
+      - "app.kubernetes.io/instance=vault"
+      - "app.kubernetes.io/name=vault"
+  register: vault
+
+- set_fact:
+    vault_pod_name: "{{ vault.resources.0.metadata.name }}"
+
+- community.kubernetes.k8s_info:
+    kind: Pod
+    namespace: '{{ namespace }}'
+    label_selectors:
+      - "app.kubernetes.io/instance=vault-client"
+      - "app.kubernetes.io/name=vault-client"
+  register: vault_client
+
+- set_fact:
+    vault_client_pod_name: "{{ vault_client.resources.0.metadata.name }}"
+
+- community.kubernetes.k8s_info:
+    kind: ServiceAccount
+    namespace: '{{ namespace }}'
+    label_selectors:
+      - "app.kubernetes.io/instance=vault-client"
+      - "app.kubernetes.io/name=vault-client"
+  register: vault_client_sa
+
+- set_fact:
+    vault_client_sa_name: "{{ vault_client_sa.resources.0.metadata.name }}"
+
+- community.kubernetes.k8s_info:
+    kind: Service
+    namespace: '{{ namespace }}'
+    label_selectors:
+      - "app.kubernetes.io/instance=vault"
+      - "app.kubernetes.io/name=vault"
+  register: vault_svc
+
+- set_fact:
+    vault_ip: "{{ vault_svc.resources.0.spec.clusterIP }}"

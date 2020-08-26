@@ -1,0 +1,10 @@
+---
+# tasks file for VaultKubeRole
+
+- name: Manage role
+  k8s:
+    definition: "{{ lookup('template', 'vault_roles_update_job.yml.j2') }}"
+  register: job
+  until: job.result.status.get('succeeded') == 1
+  retries: 9
+  delay: 10

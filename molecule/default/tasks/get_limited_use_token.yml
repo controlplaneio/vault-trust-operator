@@ -1,0 +1,8 @@
+---
+
+- name: Create limited use token
+  community.kubernetes.k8s_exec:
+    namespace: "{{ namespace }}"
+    pod: "{{ vault_pod_name }}"
+    command: "vault token create -policy={{ vault_bootstrap_policy }} -use-limit=3 -field=token"
+  register: limited_use_token

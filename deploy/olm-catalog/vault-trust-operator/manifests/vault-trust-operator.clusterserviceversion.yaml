@@ -1,0 +1,199 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: |-
+      [
+        {
+          "apiVersion": "vault.controlplane.io/v1alpha1",
+          "kind": "VaultKubeAuth",
+          "metadata": {
+            "name": "cluster1-mount1"
+          },
+          "spec": {
+            "cluster_api_addr": "https://kubernetes.default.svc/",
+            "vault_addr": "http://vault.vault.svc:8200/",
+            "vault_mount_admin_policy": "vaultkubeauth-cluster1-mount1-admin",
+            "vault_mount_path": "k8s/cluster1-mount1",
+            "vault_token": "s.xxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        },
+        {
+          "apiVersion": "vault.controlplane.io/v1alpha1",
+          "kind": "VaultKubeRole",
+          "metadata": {
+            "name": "cluster1-mount1-test-default"
+          },
+          "spec": {
+            "policies": [
+              "default"
+            ],
+            "service_account_name": "default",
+            "service_account_namespace": "test",
+            "vaultkubeauth_name": "cluster1-mount1"
+          }
+        }
+      ]
+    capabilities: Basic Install
+  name: vault-trust-operator.v0.1.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - kind: VaultKubeAuth
+      name: vaultkubeauths.vault.controlplane.io
+      version: v1alpha1
+    - kind: VaultKubeRole
+      name: vaultkuberoles.vault.controlplane.io
+      version: v1alpha1
+  description: Manages the trust between Vault and K8S
+  displayName: Vault Trust Operator
+  icon:
+  - base64data: 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
+    mediatype: image/png
+  install:
+    spec:
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - authentication.k8s.io
+          resources:
+          - tokenreviews
+          verbs:
+          - create
+        serviceAccountName: vault-token-reviewer
+      deployments:
+      - name: vault-trust-operator
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              name: vault-trust-operator
+          strategy: {}
+          template:
+            metadata:
+              labels:
+                name: vault-trust-operator
+            spec:
+              containers:
+              - env:
+                - name: WATCH_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.annotations['olm.targetNamespaces']
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+                - name: OPERATOR_NAME
+                  value: vault-trust-operator
+                - name: ANSIBLE_GATHERING
+                  value: explicit
+                image: docker.io/controlplane/vault-trust-operator:v0.1.0
+                imagePullPolicy: Always
+                livenessProbe:
+                  httpGet:
+                    path: /healthz
+                    port: 6789
+                  initialDelaySeconds: 5
+                  periodSeconds: 3
+                name: vault-trust-operator
+                resources: {}
+                volumeMounts:
+                - mountPath: /tmp/ansible-operator/runner
+                  name: runner
+              serviceAccountName: vault-trust-operator
+              volumes:
+              - emptyDir: {}
+                name: runner
+      permissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - services
+          - services/finalizers
+          - configmaps
+          verbs:
+          - create
+          - get
+          - list
+          - patch
+          - watch
+        - apiGroups:
+          - ""
+          resources:
+          - pods
+          verbs:
+          - get
+        - apiGroups:
+          - apps
+          resources:
+          - deployments
+          - replicasets
+          verbs:
+          - get
+        - apiGroups:
+          - batch
+          resources:
+          - jobs
+          verbs:
+          - create
+          - list
+          - get
+          - patch
+          - watch
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - servicemonitors
+          verbs:
+          - get
+          - create
+        - apiGroups:
+          - apps
+          resourceNames:
+          - vault-trust-operator
+          resources:
+          - deployments/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - vault.controlplane.io
+          resources:
+          - vaultkubeauths
+          - vaultkubeauths/status
+          - vaultkubeauths/finalizers
+          - vaultkuberoles
+          - vaultkuberoles/status
+          - vaultkuberoles/finalizers
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        serviceAccountName: vault-trust-operator
+    strategy: deployment
+  installModes:
+  - supported: true
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: false
+    type: AllNamespaces
+  keywords:
+  - vault
+  links:
+  - name: Vault Trust Operator
+    url: https://github.com/controlplaneio/vault-trust-operator
+  maturity: alpha
+  provider:
+    name: Control Plane
+    url: https://control-plane.io
+  version: 0.1.0

@@ -1,0 +1,33 @@
+---
+- name: Converge
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  collections:
+    - community.kubernetes
+
+  tasks:
+    - name: Create Namespace
+      k8s:
+        api_version: v1
+        kind: Namespace
+        name: '{{ namespace }}'
+
+    - name: Deploy Vault Environment
+      import_tasks: tasks/vault_env.yml
+      vars:
+        state: present
+
+    - name: Deploy Operator
+      import_tasks: tasks/deploy.yml
+      vars:
+        state: present
+
+    - import_tasks: tasks/lookups.yml
+
+    - name: Bootstrap vault policies
+      community.kubernetes.k8s_exec:
+        namespace: '{{ namespace }}'
+        pod: "{{ vault_pod_name }}"
+        command: /home/vault/bin/bootstrap
+      changed_when: false

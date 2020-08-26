@@ -1,0 +1,25 @@
+---
+- name: Destroy
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  collections:
+    - community.kubernetes
+
+  tasks:
+    - name: Destroy Vault Environment
+      import_tasks: tasks/vault_env.yml
+      vars:
+        state: absent
+
+    - name: Destroy Operator
+      import_tasks: tasks/deploy.yml
+      vars:
+        state: absent
+
+    - name: Destroy Namespace
+      k8s:
+        api_version: v1
+        kind: Namespace
+        name: '{{ namespace }}'
+        state: absent

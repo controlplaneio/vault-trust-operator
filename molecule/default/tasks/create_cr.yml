@@ -1,0 +1,13 @@
+---
+
+- name: "Create {{ definition.metadata.name }} custom resource"
+  community.kubernetes.k8s:
+    definition: "{{ definition }}"
+    state: present
+  register: cr
+  until:
+    - cr.result.get('status')
+    - cr.result.status.get('conditions')
+    - cr.result.status.conditions.0.get('reason') == 'Successful'
+  retries: 12
+  delay: 10

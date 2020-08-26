@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ vaultkubeauth_scripts_name }}
+  namespace: {{ vaultkubeauth_namespace }}
+  labels:
+    vaultkubeauth: {{ vaultkubeauth_name }}
+data:
+  vault_trust_init: |
+    #!/usr/bin/env sh
+    set -e
+    export VAULT_ADDR={{ vault_addr }}
+    export VAULT_TOKEN={{ vault_token }}
+    # Enable kubernetes auth method
+    vault auth enable --path {{ vault_mount_path }} kubernetes
+    # Configure kubernetes auth method
+    vault write auth/{{ vault_mount_path }}/config \
+        token_reviewer_jwt=@/var/run/secrets/kubernetes.io/serviceaccount/token \
+        kubernetes_host={{ cluster_api_addr }} \
+        kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    # Assign cluster trust admin policy to service account
+    vault write auth/{{ vault_mount_path }}/role/{{ vaultkubeauth_admin_role_name }} \
+        bound_service_account_names={{ vaultkubeauth_trust_admin_sa_name }} \
+        bound_service_account_namespaces={{ vaultkubeauth_namespace }} \
+        policies={{ vault_mount_admin_policy }} \
+        token_ttl=5m \
+        token_max_ttl=10m
+  vault_trust_delete: |
+    #!/usr/bin/env sh
+    set -e
+    export VAULT_ADDR={{ vault_addr }}
+    export VAULT_TOKEN=$(vault write --field=token \
+        auth/{{ vault_mount_path }}/login \
+        role={{ vaultkubeauth_admin_role_name }} \
+        jwt=@/var/run/secrets/kubernetes.io/serviceaccount/token)
+    vault auth disable {{ vault_mount_path }}
+  vault_trust_add_role: |
+    #!/usr/bin/env sh
+    set -e
+    export VAULT_ADDR={{ vault_addr }}
+    export VAULT_TOKEN=$(vault write --field=token \
+        auth/{{ vault_mount_path }}/login \
+        role={{ vaultkubeauth_admin_role_name }} \
+        jwt=@/var/run/secrets/kubernetes.io/serviceaccount/token)
+    vault write auth/{{ vault_mount_path }}/role/$1 \
+        bound_service_account_names=$2 \
+        bound_service_account_namespaces=$3 \
+        policies=$4 \
+        token_ttl=$5 \
+        token_max_ttl=$6
+  vault_trust_delete_role: |
+    #!/usr/bin/env sh
+    set -e
+    export VAULT_ADDR={{ vault_addr }}
+    export VAULT_TOKEN=$(vault write --field=token \
+        auth/{{ vault_mount_path }}/login \
+        role={{ vaultkubeauth_admin_role_name }} \
+        jwt=@/var/run/secrets/kubernetes.io/serviceaccount/token)
+    vault delete auth/{{ vault_mount_path }}/role/$1
